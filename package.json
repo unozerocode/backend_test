@@ -1,0 +1,28 @@
+{
+  "name": "backend_test",
+  "version": "1.0.0",
+  "description": "Backend test",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unozerocode/backend_test.git"
+  },
+  "keywords": [
+    "backend"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/unozerocode/backend_test/issues"
+  },
+  "homepage": "https://github.com/unozerocode/backend_test#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-endpoint": "^2.3.4",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.5"
+  }
+}
