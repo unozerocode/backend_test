@@ -1,3 +1,6 @@
+exports.rand = rand; 
+exports.psi_to_binary = psi_to_binary_string;
+
 let cyclic = 0;
 
 function seedUnit() {
@@ -6,7 +9,7 @@ function seedUnit() {
     return row;
 }
 
-function time_seed() {
+function time_seed_b2() {
     row = Array(128).fill(0, 0, 128);  
     var d = new Date();
     var n = d.getTime(); 
@@ -17,14 +20,80 @@ function time_seed() {
     for (i=0; i<base2.length; i++){
       row[start_index + i] = parseInt(base2[i]);
     }
+
+    cyclic += 1;
+    var cyclic_base2 = (cyclic).toString(2);
+    cyclic_start_index = 128 - cyclic_base2.length;
+ //   console.log(row.slice(120,128));
+ //   console.log(`Adding cyclic at ${cyclic_start_index} ${cyclic_base2} (${cyclic_base2.length})`);
+    for(i= 0; i < cyclic_base2.length; i++){
+        row[cyclic_start_index + i] = parseInt(cyclic_base2[i]);
+   //     console.log(`Added ${parseInt(cyclic_base2[i])} at ${cyclic_start_index + i}`);
+    }
+  //  console.log(row.slice(120,128));
+
     return row;
 }
 
-exports.rand = rand; //sha30(seedUnit());
+function time_seed_psi() {
+   hex = binary_to_hex(time_seed_b2().join(""));
+   if (!hex.valid) {
+       console.log("Error converting time_seed_b2 to hex");
+       return "[<::>]";
+   } else {
+     return "[<:" + hex.result + ":>]";
+   }
+}
 
-function rand() {
-    result = binary_to_hex(sha30(time_seed()).join(""));
-    return result.result;
+function psi_to_binary_string(psi) {
+  // [:<DA15DF94C0EF4EE0207E02F657191FEC>:]
+    console.log("PSI to binary");
+    console.log(` psi.slice(0,3) ${ psi.slice(0,3)}`);
+    console.log(`psi.slice(35,38) ${psi.slice(35,38)}`);
+
+    if (psi.length == 38 && psi.slice(0,3) == "[<:" && psi.slice(35,38) == ":>]") {
+        hex = psi.slice(3,35);
+        console.log(`After stripping: ${hex}`)
+        binary = hexToBinary(hex);
+        if (binary.valid) {
+          return { valid: true, result: binary.result}
+        } else {
+          return { valid: false, error: "Error converting "}
+        }
+    } else {
+        console.log("psi_to_binary_string invalid format");
+        return { valid: false, error: `Invalid format, psi.length: ${psi.length}`}
+    }
+}
+
+function psi_to_binary_array(psi) {
+    binary_string = psi_to_binary_string(psi);
+    if (binary_string.valid) {
+      let res_array = Array();
+      for (i=0; i < binary_string.result.length; i++) {
+          res_array.push(parseInt(binary_string.result.slice(i,i+1)))
+      }
+      return {valid: true, result: res_array}
+    } else {
+      return { valud: false}
+    }
+}
+
+function rand(seed = time_seed_psi()) {
+    seed_binary_array = psi_to_binary_array(seed);
+    let result;
+    if (seed_binary_array.valid) {
+        result = binary_to_hex(sha30(seed_binary_array.result).join(""));
+        if (!result.valid) {
+            console.log("Error converting to hex");
+            return {valid: false}
+        } else {
+            return result.result;
+        }
+    } else {
+        console.log(`Error parsing seed ${seed}`);
+        return {valid: false}
+    }
 }
 // Returns {row: last evaluated row, center: center column}
 function eval_block(seed) {
@@ -108,6 +177,7 @@ function sha30 (seed) {
 }
 
 function binary_to_hex(s) {
+    console.log(`binary_to_hex with ${s}`)
     var i, k, part, accum, ret = '';
     for (i = s.length-1; i >= 3; i -= 4) {
         // extract out in substrings of 4 and convert to hex
@@ -145,3 +215,25 @@ function binary_to_hex(s) {
     }
     return { valid: true, result: ret };
 }
+
+function hexToBinary(s) {
+    var i, k, part, ret = '';
+    // lookup table for easier conversion. '0' characters are padded for '1' to '7'
+    var lookupTable = {
+        '0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100',
+        '5': '0101', '6': '0110', '7': '0111', '8': '1000', '9': '1001',
+        'a': '1010', 'b': '1011', 'c': '1100', 'd': '1101',
+        'e': '1110', 'f': '1111',
+        'A': '1010', 'B': '1011', 'C': '1100', 'D': '1101',
+        'E': '1110', 'F': '1111'
+    };
+    for (i = 0; i < s.length; i += 1) {
+        if (lookupTable.hasOwnProperty(s[i])) {
+            ret += lookupTable[s[i]];
+        } else {
+            return { valid: false };
+        }
+    }
+    return { valid: true, result: ret };
+}
+

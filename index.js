@@ -1,16 +1,37 @@
 const express = require("express");
 var request = require("request");
 const app = express();
-const rand = require("./mkrand.js");
+const Mkrand = require("./mkrand.js");
 
 app.get('/', (req, res) => {
   console.log("root request");
   res.send("Root");
 });
 
+app.get("/psi2binary", (req, res) => {
+  if (req.query.psi) {
+      console.log(`/psi2binary psi= ${req.query.psi}`)
+      binary = Mkrand.psi_to_binary(req.query.psi);
+      if (binary.valid) {
+          res.send(binary.result);
+      } else {
+          res.send(`Error converting PSI: ${binary.error}`);
+      }
+  } else {
+      console.log("/psi2binary missing psi query");
+      res.status(422).send("Missing PSI query");
+  }
+});
+
 app.get("/rand", (req,res) => {
-  console.log("Got /rand");
-  res.send(rand.rand());
+  
+  if (req.query.psi) {
+      console.log(`Got /rand with PSI = ${req.query.psi}`);
+      res.send(Mkrand.rand(req.query.psi));
+  } else {
+      console.log("Got /rand");
+      res.send(Mkrand.rand());
+  }
 
 });
 
