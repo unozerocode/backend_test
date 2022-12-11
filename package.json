@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/unozerocode/backend_test#readme",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-endpoint": "^2.3.4",
     "request": "^2.88.0",
     "request-promise": "^4.2.5"
